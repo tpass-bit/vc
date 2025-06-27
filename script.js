@@ -1,41 +1,35 @@
 // DOM Elements
-const connectionScreen = document.getElementById('connectionScreen');
+const precallScreen = document.getElementById('precallScreen');
 const callScreen = document.getElementById('callScreen');
-const chatPanel = document.getElementById('chatPanel');
 const startCallBtn = document.getElementById('startCallBtn');
 const joinCallBtn = document.getElementById('joinCallBtn');
 const endCallBtn = document.getElementById('endCallBtn');
-const micControlBtn = document.getElementById('micControlBtn');
-const videoControlBtn = document.getElementById('videoControlBtn');
+const micBtn = document.getElementById('micBtn');
+const videoBtn = document.getElementById('videoBtn');
 const flipCameraBtn = document.getElementById('flipCameraBtn');
-const chatBtn = document.getElementById('chatBtn');
-const closeChatBtn = document.getElementById('closeChatBtn');
+const shareBtn = document.getElementById('shareBtn');
 const minimizeBtn = document.getElementById('minimizeBtn');
 const copyRoomIdBtn = document.getElementById('copyRoomId');
-const sendMessageBtn = document.getElementById('sendMessageBtn');
-const messageInput = document.getElementById('messageInput');
-const chatMessages = document.getElementById('chatMessages');
 const remoteVideo = document.getElementById('remoteVideo');
 const localVideo = document.getElementById('localVideo');
 const callTimer = document.getElementById('callTimer');
 const connectionStatus = document.getElementById('connectionStatus');
 const notification = document.getElementById('notification');
-const roomIdInput = document.getElementById('roomId');
+const roomIdElement = document.getElementById('roomId');
 
 // State variables
 let localStream;
-let remoteStream;
 let isMicOn = true;
 let isVideoOn = true;
 let isCallActive = false;
 let callStartTime;
 let timerInterval;
 let currentFacingMode = 'user';
-let roomId = generateRoomId();
+const roomId = generateRoomId();
 
 // Generate random room ID
 function generateRoomId() {
-    return `spark-${Math.random().toString(36).substr(2, 6)}`;
+    return `vc-${Math.random().toString(36).substr(2, 6)}`;
 }
 
 // Show notification
@@ -77,7 +71,7 @@ function toggleMic() {
         track.enabled = isMicOn;
     });
     
-    micControlBtn.innerHTML = isMicOn ? 
+    micBtn.innerHTML = isMicOn ? 
         '<i class="fas fa-microphone"></i>' : 
         '<i class="fas fa-microphone-slash"></i>';
     
@@ -93,7 +87,7 @@ function toggleVideo() {
         track.enabled = isVideoOn;
     });
     
-    videoControlBtn.innerHTML = isVideoOn ? 
+    videoBtn.innerHTML = isVideoOn ? 
         '<i class="fas fa-video"></i>' : 
         '<i class="fas fa-video-slash"></i>';
     
@@ -141,26 +135,21 @@ async function startCall() {
         localVideo.srcObject = localStream;
         
         // Show call screen
-        connectionScreen.classList.add('hidden');
+        precallScreen.classList.add('hidden');
         callScreen.classList.remove('hidden');
         
         // Simulate connection process
         connectionStatus.classList.remove('connected');
-        connectionStatus.querySelector('span').textContent = 'Connecting...';
         
         // Simulate connection delay
         setTimeout(() => {
             // Simulate remote connection
             remoteVideo.style.backgroundColor = 'transparent';
             connectionStatus.classList.add('connected');
-            connectionStatus.querySelector('span').textContent = 'Connected';
             
             // Start call timer
             isCallActive = true;
             startCallTimer();
-            
-            // Show welcome message in chat
-            addChatMessage('remote', 'Hello! Welcome to the call.');
             
             showNotification('Call connected successfully');
         }, 2000);
@@ -181,9 +170,8 @@ function endCall() {
     }
     
     // Reset UI
-    connectionScreen.classList.remove('hidden');
+    precallScreen.classList.remove('hidden');
     callScreen.classList.add('hidden');
-    chatPanel.classList.add('hidden');
     isCallActive = false;
     stopCallTimer();
     
@@ -195,83 +183,63 @@ function endCall() {
     showNotification('Call ended');
 }
 
-// Toggle chat panel
-function toggleChat() {
-    chatPanel.classList.toggle('hidden');
-}
-
-// Add message to chat
-function addChatMessage(sender, message) {
-    const now = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+// Share room link
+function shareRoomLink() {
+    const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
     
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${sender}`;
-    messageElement.innerHTML = `
-        <div class="message-content">${message}</div>
-        <div class="message-time">${time}</div>
-    `;
-    
-    chatMessages.appendChild(messageElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// Send message
-function sendMessage() {
-    const message = messageInput.value.trim();
-    if (!message) return;
-    
-    addChatMessage('local', message);
-    messageInput.value = '';
-    
-    // Simulate reply after delay if call is active
-    if (isCallActive) {
-        setTimeout(() => {
-            const replies = [
-                "Thanks for your message!",
-                "I agree with that.",
-                "Interesting point!",
-                "Let me think about that...",
-                "Can you explain more?",
-                "That's a great idea!"
-            ];
-            const reply = replies[Math.floor(Math.random() * replies.length)];
-            addChatMessage('remote', reply);
-        }, 1000 + Math.random() * 2000);
+    if (navigator.share) {
+        navigator.share({
+            title: 'Join my video call',
+            text: 'Click the link to join my video call',
+            url: url
+        }).catch(err => {
+            console.error('Error sharing:', err);
+            copyToClipboard(url);
+        });
+    } else {
+        copyToClipboard(url);
     }
 }
 
-// Copy room ID to clipboard
-function copyRoomId() {
-    navigator.clipboard.writeText(roomIdInput.value).then(() => {
-        showNotification('Room ID copied to clipboard');
+// Copy text to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Link copied to clipboard');
     }).catch(err => {
         console.error('Could not copy text:', err);
-        showNotification('Failed to copy Room ID');
+        showNotification('Failed to copy link');
     });
 }
 
 // Initialize room ID
-roomIdInput.value = roomId;
+roomIdElement.textContent = roomId;
 
 // Event listeners
 startCallBtn.addEventListener('click', startCall);
 joinCallBtn.addEventListener('click', startCall); // Same function for demo
 endCallBtn.addEventListener('click', endCall);
-micControlBtn.addEventListener('click', toggleMic);
-videoControlBtn.addEventListener('click', toggleVideo);
+micBtn.addEventListener('click', toggleMic);
+videoBtn.addEventListener('click', toggleVideo);
 flipCameraBtn.addEventListener('click', flipCamera);
-chatBtn.addEventListener('click', toggleChat);
-closeChatBtn.addEventListener('click', toggleChat);
+shareBtn.addEventListener('click', shareRoomLink);
 minimizeBtn.addEventListener('click', () => {
     callScreen.classList.add('hidden');
-    connectionScreen.classList.remove('hidden');
+    precallScreen.classList.remove('hidden');
 });
-copyRoomIdBtn.addEventListener('click', copyRoomId);
-sendMessageBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
+copyRoomIdBtn.addEventListener('click', () => copyToClipboard(roomId));
 
 // Show initial notification
 showNotification(`Your room ID: ${roomId}`, 5000);
+
+// Check for room ID in URL
+function checkUrlForRoom() {
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room');
+    
+    if (room) {
+        roomIdElement.textContent = room;
+        showNotification(`Joining room: ${room}`);
+    }
+}
+
+checkUrlForRoom();
