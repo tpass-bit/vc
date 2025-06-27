@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoConnect</title>
+    <title>SparkConnect - Video Calls</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="assets/favicon.ico">
 </head>
 <body>
     <div class="app-container">
         <!-- Pre-call Screen -->
         <div class="precall-screen" id="precallScreen">
-            <div class="app-logo">
+            <div class="app-header">
                 <i class="fas fa-video"></i>
-                <h1>VideoConnect</h1>
+                <h1>SparkConnect</h1>
+                <p>Premium video calls for free</p>
             </div>
             
             <div class="user-avatar">
-                <div class="avatar-circle" id="userAvatar">
-                    <span>ME</span>
+                <div class="avatar-pulse">
+                    <div class="avatar-circle" id="userAvatar">
+                        <span>YO</span>
+                    </div>
                 </div>
             </div>
             
@@ -26,16 +30,16 @@
                 <div class="room-id">
                     <p>Your Room ID:</p>
                     <div class="id-display">
-                        <span id="roomId">vc-5t8h2j</span>
+                        <span id="roomId">spark-7x9b2p</span>
                         <button id="copyRoomId">
-                            <i class="fas fa-copy"></i>
+                            <i class="fas fa-copy"></i> Copy
                         </button>
                     </div>
                 </div>
                 
                 <div class="call-actions">
-                    <button class="btn primary" id="startCallBtn">
-                        <i class="fas fa-video"></i> Start Call
+                    <button class="btn primary pulse" id="startCallBtn">
+                        <i class="fas fa-video"></i> New Call
                     </button>
                     <button class="btn secondary" id="joinCallBtn">
                         <i class="fas fa-user-plus"></i> Join Call
@@ -51,24 +55,22 @@
             <div class="call-header">
                 <div class="call-status">
                     <span id="callTimer">00:00</span>
-                    <div class="connection-dot connected" id="connectionStatus"></div>
+                    <div class="connection-status">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">Connecting...</span>
+                    </div>
                 </div>
-                <button class="btn icon" id="minimizeBtn">
-                    <i class="fas fa-compress"></i>
-                </button>
             </div>
             
             <div class="video-container">
-                <!-- Remote Video -->
                 <div class="remote-video-wrapper">
                     <video id="remoteVideo" autoplay playsinline></video>
                     <div class="remote-info">
-                        <div class="avatar-small">R</div>
-                        <span>Remote User</span>
+                        <div class="avatar-small">FR</div>
+                        <span>Friend</span>
                     </div>
                 </div>
                 
-                <!-- Local Video -->
                 <div class="local-video-wrapper">
                     <video id="localVideo" autoplay playsinline muted></video>
                     <button class="btn small" id="flipCameraBtn">
@@ -87,20 +89,6 @@
                 <button class="btn danger end-call" id="endCallBtn">
                     <i class="fas fa-phone-slash"></i>
                 </button>
-                <button class="btn control" id="shareBtn">
-                    <i class="fas fa-share-alt"></i>
-                </button>
-            </div>
-            
-            <div class="effects-bar">
-                <button class="effect-btn" data-effect="blur">
-                    <i class="fas fa-cloud"></i>
-                    <span>Blur</span>
-                </button>
-                <button class="effect-btn" data-effect="background">
-                    <i class="fas fa-image"></i>
-                    <span>Background</span>
-                </button>
             </div>
         </div>
         
@@ -108,6 +96,7 @@
         <div class="notification" id="notification"></div>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
