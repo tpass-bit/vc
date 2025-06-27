@@ -3,70 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Video Chat</title>
+    <title>SparkConnect - Video Calls</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="app-container">
+        <!-- Connection Screen -->
+        <div class="connection-screen" id="connectionScreen">
             <div class="logo">
-                <i class="fas fa-video"></i>
-                <span>MobileChat</span>
+                <i class="fas fa-bolt"></i>
+                <h1>SparkConnect</h1>
             </div>
-            <div class="call-info" id="callInfo">
-                <span id="callTimer">00:00</span>
-                <i class="fas fa-circle" id="callStatus"></i>
-            </div>
-        </div>
-
-        <div class="video-container">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay playsinline muted></video>
             
-            <div class="video-overlay" id="videoOverlay">
-                <div class="user-info">
-                    <div class="avatar" id="remoteAvatar">R</div>
-                    <h3 id="remoteName">Connecting...</h3>
+            <div class="connection-form">
+                <div class="user-avatar" id="userAvatar">
+                    <span>Y</span>
+                    <button class="edit-avatar">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
                 </div>
-                <button id="joinBtn" class="btn primary">Join Call</button>
+                
+                <div class="form-group">
+                    <label for="roomId">Room ID</label>
+                    <div class="input-with-button">
+                        <input type="text" id="roomId" value="spark-7x9b2p" readonly>
+                        <button id="copyRoomId">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn primary" id="startCallBtn">
+                        <i class="fas fa-video"></i> New Call
+                    </button>
+                    <button class="btn secondary" id="joinCallBtn">
+                        <i class="fas fa-user-plus"></i> Join Call
+                    </button>
+                </div>
+            </div>
+            
+            <div class="wave-background"></div>
+        </div>
+        
+        <!-- Call Screen -->
+        <div class="call-screen hidden" id="callScreen">
+            <div class="call-header">
+                <div class="call-info">
+                    <span id="callTimer">00:00</span>
+                    <div class="connection-status connected" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span>Connected</span>
+                    </div>
+                </div>
+                <button class="btn icon" id="minimizeBtn">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+            
+            <div class="video-container">
+                <div class="remote-video-container">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div class="remote-user-info">
+                        <div class="avatar">R</div>
+                        <span>Remote User</span>
+                    </div>
+                </div>
+                
+                <div class="local-video-container">
+                    <video id="localVideo" autoplay playsinline muted></video>
+                    <div class="user-controls">
+                        <button class="btn small" id="flipCameraBtn">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="call-controls">
+                <button class="btn control" id="micControlBtn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="btn control" id="videoControlBtn">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="btn danger" id="endCallBtn">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+                <button class="btn control" id="shareScreenBtn">
+                    <i class="fas fa-desktop"></i>
+                </button>
+                <button class="btn control" id="chatBtn">
+                    <i class="fas fa-comment-dots"></i>
+                </button>
+            </div>
+            
+            <div class="call-effects">
+                <button class="effect-btn" data-effect="blur">
+                    <i class="fas fa-cloud"></i>
+                    <span>Blur</span>
+                </button>
+                <button class="effect-btn" data-effect="virtual-bg">
+                    <i class="fas fa-image"></i>
+                    <span>Background</span>
+                </button>
+                <button class="effect-btn" data-effect="raise-hand">
+                    <i class="fas fa-hand-paper"></i>
+                    <span>Hand</span>
+                </button>
             </div>
         </div>
-
-        <div class="controls">
-            <button id="micBtn" class="btn control">
-                <i class="fas fa-microphone"></i>
-            </button>
-            <button id="videoBtn" class="btn control">
-                <i class="fas fa-video"></i>
-            </button>
-            <button id="hangupBtn" class="btn danger">
-                <i class="fas fa-phone-slash"></i>
-            </button>
-            <button id="shareBtn" class="btn control">
-                <i class="fas fa-share-alt"></i>
-            </button>
-            <button id="chatBtn" class="btn control">
-                <i class="fas fa-comment-dots"></i>
-            </button>
-        </div>
-
-        <div class="chat-container hidden" id="chatContainer">
+        
+        <!-- Chat Panel -->
+        <div class="chat-panel hidden" id="chatPanel">
             <div class="chat-header">
                 <h3>Chat</h3>
-                <button id="closeChatBtn">
+                <button class="btn icon" id="closeChatBtn">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message remote">
+                    <div class="message-content">Hello there! Can you hear me?</div>
+                    <div class="message-time">10:30 AM</div>
+                </div>
+            </div>
+            
             <div class="chat-input">
                 <input type="text" id="messageInput" placeholder="Type a message...">
-                <button id="sendMessageBtn">
+                <button class="btn icon" id="sendMessageBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
-
+        
+        <!-- Notification -->
         <div class="notification" id="notification"></div>
     </div>
 
