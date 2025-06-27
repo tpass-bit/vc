@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SparkConnect - Video Calls</title>
+    <title>VideoConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- Connection Screen -->
-        <div class="connection-screen" id="connectionScreen">
-            <div class="logo">
-                <i class="fas fa-bolt"></i>
-                <h1>SparkConnect</h1>
+        <!-- Pre-call Screen -->
+        <div class="precall-screen" id="precallScreen">
+            <div class="app-logo">
+                <i class="fas fa-video"></i>
+                <h1>VideoConnect</h1>
             </div>
             
-            <div class="connection-form">
-                <div class="user-avatar" id="userAvatar">
-                    <span>Y</span>
-                    <button class="edit-avatar">
-                        <i class="fas fa-pencil-alt"></i>
-                    </button>
+            <div class="user-avatar">
+                <div class="avatar-circle" id="userAvatar">
+                    <span>ME</span>
                 </div>
-                
-                <div class="form-group">
-                    <label for="roomId">Room ID</label>
-                    <div class="input-with-button">
-                        <input type="text" id="roomId" value="spark-7x9b2p" readonly>
+            </div>
+            
+            <div class="room-controls">
+                <div class="room-id">
+                    <p>Your Room ID:</p>
+                    <div class="id-display">
+                        <span id="roomId">vc-5t8h2j</span>
                         <button id="copyRoomId">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>
                 
-                <div class="action-buttons">
+                <div class="call-actions">
                     <button class="btn primary" id="startCallBtn">
-                        <i class="fas fa-video"></i> New Call
+                        <i class="fas fa-video"></i> Start Call
                     </button>
                     <button class="btn secondary" id="joinCallBtn">
                         <i class="fas fa-user-plus"></i> Join Call
@@ -44,97 +43,63 @@
                 </div>
             </div>
             
-            <div class="wave-background"></div>
+            <div class="wave-bg"></div>
         </div>
         
-        <!-- Call Screen -->
+        <!-- Active Call Screen -->
         <div class="call-screen hidden" id="callScreen">
             <div class="call-header">
-                <div class="call-info">
+                <div class="call-status">
                     <span id="callTimer">00:00</span>
-                    <div class="connection-status connected" id="connectionStatus">
-                        <div class="status-dot"></div>
-                        <span>Connected</span>
-                    </div>
+                    <div class="connection-dot connected" id="connectionStatus"></div>
                 </div>
                 <button class="btn icon" id="minimizeBtn">
-                    <i class="fas fa-minus"></i>
+                    <i class="fas fa-compress"></i>
                 </button>
             </div>
             
             <div class="video-container">
-                <div class="remote-video-container">
+                <!-- Remote Video -->
+                <div class="remote-video-wrapper">
                     <video id="remoteVideo" autoplay playsinline></video>
-                    <div class="remote-user-info">
-                        <div class="avatar">R</div>
+                    <div class="remote-info">
+                        <div class="avatar-small">R</div>
                         <span>Remote User</span>
                     </div>
                 </div>
                 
-                <div class="local-video-container">
+                <!-- Local Video -->
+                <div class="local-video-wrapper">
                     <video id="localVideo" autoplay playsinline muted></video>
-                    <div class="user-controls">
-                        <button class="btn small" id="flipCameraBtn">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
+                    <button class="btn small" id="flipCameraBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
             </div>
             
             <div class="call-controls">
-                <button class="btn control" id="micControlBtn">
+                <button class="btn control" id="micBtn">
                     <i class="fas fa-microphone"></i>
                 </button>
-                <button class="btn control" id="videoControlBtn">
+                <button class="btn control" id="videoBtn">
                     <i class="fas fa-video"></i>
                 </button>
-                <button class="btn danger" id="endCallBtn">
+                <button class="btn danger end-call" id="endCallBtn">
                     <i class="fas fa-phone-slash"></i>
                 </button>
-                <button class="btn control" id="shareScreenBtn">
-                    <i class="fas fa-desktop"></i>
-                </button>
-                <button class="btn control" id="chatBtn">
-                    <i class="fas fa-comment-dots"></i>
+                <button class="btn control" id="shareBtn">
+                    <i class="fas fa-share-alt"></i>
                 </button>
             </div>
             
-            <div class="call-effects">
+            <div class="effects-bar">
                 <button class="effect-btn" data-effect="blur">
                     <i class="fas fa-cloud"></i>
                     <span>Blur</span>
                 </button>
-                <button class="effect-btn" data-effect="virtual-bg">
+                <button class="effect-btn" data-effect="background">
                     <i class="fas fa-image"></i>
                     <span>Background</span>
-                </button>
-                <button class="effect-btn" data-effect="raise-hand">
-                    <i class="fas fa-hand-paper"></i>
-                    <span>Hand</span>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Chat Panel -->
-        <div class="chat-panel hidden" id="chatPanel">
-            <div class="chat-header">
-                <h3>Chat</h3>
-                <button class="btn icon" id="closeChatBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <div class="message remote">
-                    <div class="message-content">Hello there! Can you hear me?</div>
-                    <div class="message-time">10:30 AM</div>
-                </div>
-            </div>
-            
-            <div class="chat-input">
-                <input type="text" id="messageInput" placeholder="Type a message...">
-                <button class="btn icon" id="sendMessageBtn">
-                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
