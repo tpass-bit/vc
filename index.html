@@ -3,136 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidConnect - Beautiful Video Call App</title>
+    <title>Mobile Video Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <div class="header">
             <div class="logo">
                 <i class="fas fa-video"></i>
-                <span>VidConnect</span>
+                <span>MobileChat</span>
             </div>
-            <div class="call-controls">
-                <button class="control-btn" id="micToggle" title="Mute/Unmute">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <button class="control-btn" id="videoToggle" title="Video On/Off">
-                    <i class="fas fa-video"></i>
-                </button>
-                <button class="control-btn success" id="screenShare" title="Share Screen">
-                    <i class="fas fa-desktop"></i>
-                </button>
-                <button class="control-btn primary" id="record" title="Record Call">
-                    <i class="fas fa-circle"></i>
-                </button>
-                <button class="control-btn danger" id="hangup" title="End Call">
-                    <i class="fas fa-phone-slash"></i>
-                </button>
-            </div>
-        </header>
-        
-        <div class="main-content">
-            <div class="video-container">
-                <div class="remote-video-container">
-                    <video class="remote-video" id="remoteVideo" autoplay playsinline></video>
-                    <div class="video-overlay" id="videoOverlay">
-                        <div class="remote-user">Alex Johnson</div>
-                        <div class="call-status" id="callStatus">Connecting...</div>
-                    </div>
-                    <div class="connection-quality">
-                        <i class="fas fa-signal"></i>
-                        <div class="quality-indicator" id="qualityIndicator"></div>
-                        <span>Connection</span>
-                    </div>
-                </div>
-                <div class="local-video-container">
-                    <video class="local-video" id="localVideo" autoplay playsinline muted></video>
-                </div>
-            </div>
-            
-            <div class="sidebar">
-                <div class="panel">
-                    <div class="panel-title">
-                        <i class="fas fa-users"></i>
-                        <span>Participants (2)</span>
-                    </div>
-                    <div class="participants-list">
-                        <div class="participant">
-                            <div class="avatar">AJ</div>
-                            <div class="participant-info">
-                                <div class="participant-name">Alex Johnson</div>
-                                <div class="participant-status">Speaking now</div>
-                            </div>
-                            <i class="fas fa-microphone" style="color: var(--success);"></i>
-                        </div>
-                        <div class="participant">
-                            <div class="avatar">Y</div>
-                            <div class="participant-info">
-                                <div class="participant-name">You</div>
-                                <div class="participant-status">Online</div>
-                            </div>
-                            <i class="fas fa-microphone" style="color: var(--success);"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="panel">
-                    <div class="panel-title">
-                        <i class="fas fa-star"></i>
-                        <span>Features</span>
-                    </div>
-                    <div class="features-grid">
-                        <div class="feature" id="blurBg">
-                            <i class="fas fa-cloud"></i>
-                            <span class="feature-name">Blur Background</span>
-                        </div>
-                        <div class="feature" id="virtualBg">
-                            <i class="fas fa-image"></i>
-                            <span class="feature-name">Virtual Background</span>
-                        </div>
-                        <div class="feature" id="raiseHand">
-                            <i class="fas fa-hand-paper"></i>
-                            <span class="feature-name">Raise Hand</span>
-                        </div>
-                        <div class="feature" id="invite">
-                            <i class="fas fa-user-plus"></i>
-                            <span class="feature-name">Invite People</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="panel" style="flex: 1; display: flex; flex-direction: column;">
-                    <div class="panel-title">
-                        <i class="fas fa-comments"></i>
-                        <span>Chat</span>
-                    </div>
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="message remote">
-                            <div>Hi there! Can you hear me okay?</div>
-                            <div class="message-time">10:24 AM</div>
-                        </div>
-                        <div class="message local">
-                            <div>Yes, I can hear you perfectly. How about me?</div>
-                            <div class="message-time">10:25 AM</div>
-                        </div>
-                        <div class="message remote">
-                            <div>Your audio is crystal clear. Love the UI of this app!</div>
-                            <div class="message-time">10:25 AM</div>
-                        </div>
-                    </div>
-                    <div class="chat-input-container">
-                        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
-                        <button class="send-btn" id="sendMessage">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
+            <div class="call-info" id="callInfo">
+                <span id="callTimer">00:00</span>
+                <i class="fas fa-circle" id="callStatus"></i>
             </div>
         </div>
+
+        <div class="video-container">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay playsinline muted></video>
+            
+            <div class="video-overlay" id="videoOverlay">
+                <div class="user-info">
+                    <div class="avatar" id="remoteAvatar">R</div>
+                    <h3 id="remoteName">Connecting...</h3>
+                </div>
+                <button id="joinBtn" class="btn primary">Join Call</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="micBtn" class="btn control">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button id="videoBtn" class="btn control">
+                <i class="fas fa-video"></i>
+            </button>
+            <button id="hangupBtn" class="btn danger">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+            <button id="shareBtn" class="btn control">
+                <i class="fas fa-share-alt"></i>
+            </button>
+            <button id="chatBtn" class="btn control">
+                <i class="fas fa-comment-dots"></i>
+            </button>
+        </div>
+
+        <div class="chat-container hidden" id="chatContainer">
+            <div class="chat-header">
+                <h3>Chat</h3>
+                <button id="closeChatBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button id="sendMessageBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="notification" id="notification"></div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
