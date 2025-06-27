@@ -7,59 +7,178 @@ const endCallBtn = document.getElementById('endCallBtn');
 const micBtn = document.getElementById('micBtn');
 const videoBtn = document.getElementById('videoBtn');
 const flipCameraBtn = document.getElementById('flipCameraBtn');
-const shareBtn = document.getElementById('shareBtn');
-const minimizeBtn = document.getElementById('minimizeBtn');
 const copyRoomIdBtn = document.getElementById('copyRoomId');
 const remoteVideo = document.getElementById('remoteVideo');
 const localVideo = document.getElementById('localVideo');
 const callTimer = document.getElementById('callTimer');
-const connectionStatus = document.getElementById('connectionStatus');
-const notification = document.getElementById('notification');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
 const roomIdElement = document.getElementById('roomId');
+const notification = document.getElementById('notification');
 
 // State variables
 let localStream;
+let peer;
+let currentPeerId;
+let currentCall;
 let isMicOn = true;
 let isVideoOn = true;
-let isCallActive = false;
 let callStartTime;
 let timerInterval;
 let currentFacingMode = 'user';
-const roomId = generateRoomId();
 
-// Generate random room ID
-function generateRoomId() {
-    return `vc-${Math.random().toString(36).substr(2, 6)}`;
-}
-
-// Show notification
-function showNotification(message, duration = 3000) {
-    notification.textContent = message;
-    notification.classList.add('show');
+// Initialize the app
+async function init() {
+    // Generate or get room ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomId = urlParams.get('room');
     
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, duration);
+    if (!roomId) {
+        roomId = 'spark-' + Math.random().toString(36).substr(2, 6);
+        window.history.replaceState({}, '', `?room=${roomId}`);
+    }
+    
+    roomIdElement.textContent = roomId;
+
+    // Initialize PeerJS
+    peer = new Peer({
+        host: '0.peerjs.com',
+        port: 443,
+        secure: true,
+        debug: 3
+    });
+
+    peer.on('open', (id) => {
+        currentPeerId = id;
+        updateStatus('Connected', 'success');
+        showNotification('Ready for calls');
+    });
+
+    peer.on('error', (err) => {
+        console.error('PeerJS error:', err);
+        updateStatus('Connection error', 'error');
+        showNotification('Connection error: ' + err.type);
+    });
+
+    peer.on('call', (call) => {
+        // Answer the call with our stream
+        call.answer(localStream);
+        currentCall = call;
+        updateStatus('In call', 'success');
+        
+        call.on('stream', (remoteStream) => {
+            remoteVideo.srcObject = remoteStream;
+            startCallTimer();
+            showNotification('Call connected');
+        });
+        
+        call.on('close', () => {
+            endCall();
+        });
+    });
+
+    // Get user media
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: true
+        });
+        localVideo.srcObject = localStream;
+        
+        // If joining an existing room
+        if (urlParams.get('join')) {
+            const call = peer.call(urlParams.get('join'), localStream);
+            currentCall = call;
+            
+            call.on('stream', (remoteStream) => {
+                remoteVideo.srcObject = remoteStream;
+                updateStatus('In call', 'success');
+                startCallTimer();
+            });
+            
+            call.on('close', endCall);
+        }
+    } catch (err) {
+        console.error('Media error:', err);
+        showNotification('Camera/mic access denied');
+        updateStatus('Media blocked', 'error');
+    }
 }
 
-// Update call timer
-function updateCallTimer() {
-    const now = new Date();
-    const elapsed = Math.floor((now - callStartTime) / 1000);
-    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-    const seconds = (elapsed % 60).toString().padStart(2, '0');
-    callTimer.textContent = `${minutes}:${seconds}`;
+// Update connection status UI
+function updateStatus(text, type) {
+    statusText.textContent = text;
+    statusDot.className = 'status-dot';
+    
+    if (type === 'success') {
+        statusDot.classList.add('connected');
+    } else if (type === 'error') {
+        statusDot.style.backgroundColor = 'var(--danger)';
+    }
 }
 
 // Start call timer
 function startCallTimer() {
     callStartTime = new Date();
-    timerInterval = setInterval(updateCallTimer, 1000);
+    clearInterval(timerInterval);
+    
+    timerInterval = setInterval(() => {
+        const now = new Date();
+        const elapsed = Math.floor((now - callStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        callTimer.textContent = `${minutes}:${seconds}`;
+    }, 1000);
 }
 
-// Stop call timer
-function stopCallTimer() {
+// End current call
+function endCall() {
+    if (currentCall) {
+        currentCall.close();
+    }
+    
+    if (remoteVideo.srcObject) {
+        remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+        remoteVideo.srcObject = null;
+    }
+    
     clearInterval(timerInterval);
+    callTimer.textContent = '00:00';
+    updateStatus('Disconnected', 'error');
+    
+    // Return to precall screen after delay
+    setTimeout(() => {
+        precallScreen.classList.remove('hidden');
+        callScreen.classList.add('hidden');
+    }, 1000);
+}
+
+// Flip camera
+async function flipCamera() {
+    if (!localStream) return;
+    
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    try {
+        // Stop previous video tracks
+        localStream.getVideoTracks().forEach(track => track.stop());
+        
+        // Get new stream
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: isMicOn
+        });
+        
+        // Replace video track
+        const videoTrack = stream.getVideoTracks()[0];
+        localStream.addTrack(videoTrack);
+        localVideo.srcObject = localStream;
+        
+        showNotification(`Switched to ${currentFacingMode === 'user' ? 'front' : 'rear'} camera`);
+    } catch (err) {
+        console.error('Camera flip error:', err);
+        showNotification('Failed to switch camera');
+    }
 }
 
 // Toggle microphone
@@ -71,9 +190,9 @@ function toggleMic() {
         track.enabled = isMicOn;
     });
     
-    micBtn.innerHTML = isMicOn ? 
-        '<i class="fas fa-microphone"></i>' : 
-        '<i class="fas fa-microphone-slash"></i>';
+    micBtn.innerHTML = isMicOn 
+        ? '<i class="fas fa-microphone"></i>' 
+        : '<i class="fas fa-microphone-slash"></i>';
     
     showNotification(isMicOn ? 'Microphone on' : 'Microphone off');
 }
@@ -87,159 +206,56 @@ function toggleVideo() {
         track.enabled = isVideoOn;
     });
     
-    videoBtn.innerHTML = isVideoOn ? 
-        '<i class="fas fa-video"></i>' : 
-        '<i class="fas fa-video-slash"></i>';
+    videoBtn.innerHTML = isVideoOn 
+        ? '<i class="fas fa-video"></i>' 
+        : '<i class="fas fa-video-slash"></i>';
     
     showNotification(isVideoOn ? 'Video on' : 'Video off');
 }
 
-// Flip camera
-async function flipCamera() {
-    if (!localStream) return;
+// Show notification
+function showNotification(message, duration = 3000) {
+    notification.textContent = message;
+    notification.classList.add('show');
     
-    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
-    try {
-        // Stop previous video tracks
-        localStream.getVideoTracks().forEach(track => track.stop());
-        
-        // Get new stream with flipped camera
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode },
-            audio: isMicOn
-        });
-        
-        // Replace video track
-        const videoTrack = stream.getVideoTracks()[0];
-        localStream.addTrack(videoTrack);
-        localVideo.srcObject = localStream;
-        
-        showNotification(`Camera switched to ${currentFacingMode === 'user' ? 'front' : 'back'}`);
-    } catch (error) {
-        console.error('Error flipping camera:', error);
-        showNotification('Failed to switch camera');
-    }
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, duration);
 }
 
-// Start call
-async function startCall() {
-    try {
-        // Get user media
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: true
-        });
-        
-        // Display local video
-        localVideo.srcObject = localStream;
-        
-        // Show call screen
-        precallScreen.classList.add('hidden');
-        callScreen.classList.remove('hidden');
-        
-        // Simulate connection process
-        connectionStatus.classList.remove('connected');
-        
-        // Simulate connection delay
-        setTimeout(() => {
-            // Simulate remote connection
-            remoteVideo.style.backgroundColor = 'transparent';
-            connectionStatus.classList.add('connected');
-            
-            // Start call timer
-            isCallActive = true;
-            startCallTimer();
-            
-            showNotification('Call connected successfully');
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Error accessing media devices:', error);
-        showNotification('Error accessing camera/microphone');
-    }
-}
-
-// End call
-function endCall() {
-    if (!isCallActive) return;
-    
-    // Stop local stream
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-    }
-    
-    // Reset UI
-    precallScreen.classList.remove('hidden');
-    callScreen.classList.add('hidden');
-    isCallActive = false;
-    stopCallTimer();
-    
-    // Clear video streams
-    localVideo.srcObject = null;
-    remoteVideo.srcObject = null;
-    remoteVideo.style.backgroundColor = '#000';
-    
-    showNotification('Call ended');
-}
-
-// Share room link
-function shareRoomLink() {
-    const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Join my video call',
-            text: 'Click the link to join my video call',
-            url: url
-        }).catch(err => {
-            console.error('Error sharing:', err);
-            copyToClipboard(url);
-        });
-    } else {
-        copyToClipboard(url);
-    }
-}
-
-// Copy text to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Link copied to clipboard');
+// Copy room ID to clipboard
+function copyRoomId() {
+    navigator.clipboard.writeText(roomIdElement.textContent).then(() => {
+        showNotification('Room ID copied!');
     }).catch(err => {
-        console.error('Could not copy text:', err);
-        showNotification('Failed to copy link');
+        showNotification('Failed to copy');
+        console.error('Copy failed:', err);
     });
 }
 
-// Initialize room ID
-roomIdElement.textContent = roomId;
+// Start a new call
+function startNewCall() {
+    precallScreen.classList.add('hidden');
+    callScreen.classList.remove('hidden');
+    updateStatus('Waiting for peer...', 'pending');
+}
+
+// Join an existing call
+function joinCall() {
+    const roomId = prompt('Enter Room ID:');
+    if (roomId) {
+        window.location.href = `${window.location.pathname}?room=${roomId}&join=true`;
+    }
+}
 
 // Event listeners
-startCallBtn.addEventListener('click', startCall);
-joinCallBtn.addEventListener('click', startCall); // Same function for demo
+startCallBtn.addEventListener('click', startNewCall);
+joinCallBtn.addEventListener('click', joinCall);
 endCallBtn.addEventListener('click', endCall);
 micBtn.addEventListener('click', toggleMic);
 videoBtn.addEventListener('click', toggleVideo);
 flipCameraBtn.addEventListener('click', flipCamera);
-shareBtn.addEventListener('click', shareRoomLink);
-minimizeBtn.addEventListener('click', () => {
-    callScreen.classList.add('hidden');
-    precallScreen.classList.remove('hidden');
-});
-copyRoomIdBtn.addEventListener('click', () => copyToClipboard(roomId));
+copyRoomIdBtn.addEventListener('click', copyRoomId);
 
-// Show initial notification
-showNotification(`Your room ID: ${roomId}`, 5000);
-
-// Check for room ID in URL
-function checkUrlForRoom() {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room');
-    
-    if (room) {
-        roomIdElement.textContent = room;
-        showNotification(`Joining room: ${room}`);
-    }
-}
-
-checkUrlForRoom();
+// Initialize the app when loaded
+window.addEventListener('DOMContentLoaded', init);
